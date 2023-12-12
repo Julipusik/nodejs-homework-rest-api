@@ -22,7 +22,7 @@ const contactSchema = new Schema({
         ref: 'user',
         required: true,
     },
-});
+}, {versionKey: false, timestamps: true});
 
 contactSchema.post("save", handleSaveError);
 contactSchema.pre("findOneANdUpdate", preUpdate);

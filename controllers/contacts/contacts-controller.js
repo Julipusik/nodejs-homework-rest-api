@@ -4,12 +4,10 @@ import tryCatchWrapper from "../../decorators/tryCatchWrapper.js";
 
 const getAllContacts = async (req, res) => {
     const { _id: owner } = req.user;
-    const { page = 1, limit = 20, favorite} = req.query;
+    const { page = 1, limit = 20, ...filters} = req.query;
     const skip = (page - 1) * limit;
-    const filter = { owner };
-    if (favorite !== undefined) {
-        filter.favorite = favorite;
-    }
+    const filter = { owner, ...filters };
+
     const result = await Contact.find(filter, "-craeteAt -updateAt", {skip, limit}).populate("owner", "username email");
     res.json(result);
 };
