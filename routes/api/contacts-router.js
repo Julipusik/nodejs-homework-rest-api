@@ -4,20 +4,20 @@ import { authenticate, isEmptyBody, isValidId } from "../../middlewares/index.js
 import { addContactSchema, contactFavoriteSchema, updateContactSchema } from "../../models/Contact.js";
 import validateWrapper from "../../decorators/validateWrapper.js";
 
-const router = express.Router();
+const contactsRouter = express.Router();
 
-router.use(authenticate);
+contactsRouter.use(authenticate);
 
-router.get('/', contactsController.getAllContacts);
+contactsRouter.get('/', contactsController.getAllContacts);
 
-router.get('/:contactId', isValidId, contactsController.getContactById);
+contactsRouter.get('/:contactId', isValidId, contactsController.getContactById);
 
-router.post('/', isEmptyBody, validateWrapper(addContactSchema), contactsController.addContact);
+contactsRouter.post('/', isEmptyBody, validateWrapper(addContactSchema), contactsController.addContact);
 
-router.put('/:contactId', isValidId, isEmptyBody, validateWrapper(updateContactSchema), contactsController.updateContact);
+contactsRouter.put('/:contactId', isValidId, isEmptyBody, validateWrapper(updateContactSchema), contactsController.updateContact);
 
-router.patch("/:contactId/favorite", isValidId, isEmptyBody, validateWrapper(contactFavoriteSchema), contactsController.getContactById)
+contactsRouter.patch("/:contactId/favorite", isValidId, isEmptyBody, validateWrapper(contactFavoriteSchema), contactsController.getContactById)
 
-router.delete('/:contactId', isValidId, contactsController.deleteContact);
+contactsRouter.delete('/:contactId', isValidId, contactsController.deleteContact);
 
-export default router;
+export default contactsRouter;

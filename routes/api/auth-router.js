@@ -2,16 +2,18 @@ import express from "express";
 import authController from "../../controllers/contacts/auth-controller.js";
 import { authenticate, isEmptyBody} from "../../middlewares/index.js";
 import validateWrapper from "../../decorators/validateWrapper.js";
-import { userSignupSchema, userSigninSchema } from "../../models/User.js";
+import { userSignupSchema, userSigninSchema, updateSubscriptionSchema } from "../../models/User.js";
 
 const authRouter = express.Router();
 
-authRouter.post("/signup", isEmptyBody, validateWrapper(userSignupSchema), authController.signup);
+authRouter.post("/register", isEmptyBody, validateWrapper(userSignupSchema), authController.signup);
 
-authRouter.post("/signin", isEmptyBody, validateWrapper(userSigninSchema), authController.signin);
+authRouter.post("/login", isEmptyBody, validateWrapper(userSigninSchema), authController.signin);
 
 authRouter.get("/current", authenticate, authController.getCurrent);
 
-authRouter.post("/signout", authenticate, authController.signout);
+authRouter.post("/logout", authenticate, authController.signout);
+
+authRouter.patch("/", authenticate, validateWrapper(updateSubscriptionSchema), authController.updateSubscription);
 
 export default authRouter;

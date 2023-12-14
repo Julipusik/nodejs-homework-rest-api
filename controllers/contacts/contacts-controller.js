@@ -8,7 +8,7 @@ const getAllContacts = async (req, res) => {
     const skip = (page - 1) * limit;
     const filter = { owner, ...filters };
 
-    const result = await Contact.find(filter, "-craeteAt -updateAt", {skip, limit}).populate("owner", "username email");
+    const result = await Contact.find(filter, "-craeteAt -updateAt", {skip, limit}).populate("owner", "email");
     res.json(result);
 };
 

@@ -8,7 +8,6 @@ import tryCatchWrapper from "../../decorators/tryCatchWrapper.js";
 const { JWT_SECRET } = process.env;
 
 const signup = async (req, res) => {
-    try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
         if (user) {
@@ -23,16 +22,14 @@ const signup = async (req, res) => {
             user: {
                 username: newUser.username,
                 email: newUser.email,
+                subscription: newUser.subscription,
             }
         });
-    } catch (error) {
-        throw HttpError(400, "Missed required field");
-    }
 }
 
 const signin = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, subscription } = req.body;
         const user = await User.findOne({ email });
         if (!user) {
             throw HttpError(401, "Email or password invalid");
@@ -52,6 +49,7 @@ const signin = async (req, res) => {
             token,
             user: {
                 email: user.email,
+                subscription: user.subscription,
             },
         })
     } catch (error) {
@@ -61,13 +59,11 @@ const signin = async (req, res) => {
 
 const getCurrent = async (req, res) => {
     try {
-        const { username, email } = req.user;
+        const { email, subscription } = req.user;
 
         res.json({
-            user: {
-                username,
                 email,
-            }
+                subscription,
         });
     } catch (error) {
         throw HttpError(401, "Not authorized");
@@ -77,6 +73,15 @@ const getCurrent = async (req, res) => {
 const signout = async (req, res) => {
     const { _id } = req.user;
     await User.findByIdAndUpdate(_id, { token: "" });
+    res.status(204).json();
+}
+
+const updateSubscription = async (rec, res) => {
+    const { _id } = req.user;
+    const { subscription } = req.body;
+    await User.findByIdAndUpdate(_id, { subscription });
+
+    res.json({ message: "The subscription was updated successfully" });
 }
 
 export default {
@@ -84,4 +89,5 @@ export default {
     signin: tryCatchWrapper(signin),
     getCurrent: tryCatchWrapper(getCurrent),
     signout: tryCatchWrapper(signout),
+    updateSubscription: tryCatchWrapper(updateSubscription),
 }
