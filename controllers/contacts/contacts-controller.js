@@ -3,13 +3,19 @@ import { HttpError } from "../../helpers/index.js";
 import tryCatchWrapper from "../../decorators/tryCatchWrapper.js";
 
 const getAllContacts = async (req, res) => {
-    const result = await Contact.find();
+    const { _id: owner } = req.user;
+    const { page = 1, limit = 20, ...filters} = req.query;
+    const skip = (page - 1) * limit;
+    const filter = { owner, ...filters };
+
+    const result = await Contact.find(filter, "-craeteAt -updateAt", {skip, limit}).populate("owner", "email");
     res.json(result);
 };
 
 const getContactById = async (req, res) => {
     const { contactId } = req.params;
-    const result = await Contact.findById(contactId);
+    const { _id: owner } = req.user;
+    const result = await Contact.findOne({ _id: contactId, owner });
     if (!result) {
         throw HttpError(404, `Contact with id=${contactId} not found`);
     }
@@ -17,13 +23,15 @@ const getContactById = async (req, res) => {
 };
 
 const addContact = async (req, res) => {
-    const result = await Contact.create(req.body);
+    const { _id: owner } = req.user;
+    const result = await Contact.create({ ...req.body, owner});
     res.status(201).json(result);
 };
 
 const updateContact = async (req, res) => {
     const { contactId } = req.params;
-    const result = await Contact.findByIdAndUpdate(contactId, req.body);
+    const { _id: owner } = req.user;
+    const result = await Contact.findOneAndUpdate({_id: contactId, owner}, req.body);
     if (!result) {
         throw HttpError(404, `Contact with id=${contactId} not found`);
     }
@@ -31,7 +39,8 @@ const updateContact = async (req, res) => {
 
 const deleteContact = async (req, res) => {
     const { contactId } = req.params;
-    const result = await Contact.findByIdAndDelete(contactId);
+    const { _id: owner } = req.user;
+    const result = await Contact.findOneAndDelete({_id: contactId, owner});
     if (!result) {
         throw HttpError(404, `Contact with id=${contactId} not found`)
     }
