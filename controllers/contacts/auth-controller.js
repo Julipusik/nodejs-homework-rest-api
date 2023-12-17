@@ -91,13 +91,14 @@ const updateSubscription = async (rec, res) => {
 }
 
 const updateAvatar = async (req, res) => {
-    try {
-        if (!req.file) {
+    if (!req.file) {
             throw HttpError(400, "No file provided");
         }
-        const { _id } = req.user;
-        const { path: oldPath, filename } = req.file;
+    
+    const { _id } = req.user;
+    const { path: oldPath, filename } = req.file;
 
+    try {
         const img = await Jimp.read(oldPath);
         img.resize(250, 250);
         await fs.rename(oldPath);
@@ -106,9 +107,11 @@ const updateAvatar = async (req, res) => {
         await fs.rename(oldPath, newPath);
 
         const avatarURL = path.join("avatars", filename);
-        await User.findByIdAndUpdate(_id, { avatarURL });
+        const updAvatar = await User.findByIdAndUpdate(_id, { avatarURL });
 
-        res.json({ avatarURL });
+        res.status(200).json({
+            avatarURL: updAvatar.avatarURL
+        })
     } catch (error) {
         throw HttpError(500, "Image update failed");
     }
