@@ -7,6 +7,7 @@ import tryCatchWrapper from "../../decorators/tryCatchWrapper.js";
 import fs from "fs/promises";
 import path from "path";
 import gravatar from "gravatar";
+import Jimp from "jimp";
 
 const avatarsPath = path.resolve("public", "avatars");
 
