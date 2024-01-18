@@ -4,27 +4,34 @@ import "dotenv/config.js";
 import User from "../../models/User.js";
 import { HttpError } from "../../helpers/index.js";
 import tryCatchWrapper from "../../decorators/tryCatchWrapper.js";
+import fs from "fs/promises";
+import path from "path";
+import gravatar from "gravatar";
+import Jimp from "jimp";
+
+const avatarsPath = path.resolve("public", "avatars");
 
 const { JWT_SECRET } = process.env;
 
 const signup = async (req, res) => {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email });
-        if (user) {
-            throw HttpError(409, "Email in use");
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (user) {
+        throw HttpError(409, "Email in use");
+    }
+
+    const hashPassword = await bcrypt.hash(password, 10);
+
+    const avatarURL = gravatar.url(email);
+
+    const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL });
+
+    res.status(201).json({
+        user: {
+            email: newUser.email,
+            subscription: newUser.subscription,
         }
-
-        const hashPassword = await bcrypt.hash(password, 10);
-
-        const newUser = await User.create({ ...req.body, password: hashPassword });
-
-        res.status(201).json({
-            user: {
-                username: newUser.username,
-                email: newUser.email,
-                subscription: newUser.subscription,
-            }
-        });
+    });
 }
 
 const signin = async (req, res) => {
@@ -84,10 +91,38 @@ const updateSubscription = async (rec, res) => {
     res.json({ message: "The subscription was updated successfully" });
 }
 
+const updateAvatar = async (req, res) => {
+    if (!req.file) {
+            throw HttpError(400, "No file provided");
+        }
+    
+    const { _id } = req.user;
+    const { path: oldPath, filename } = req.file;
+
+    try {
+        const img = await Jimp.read(oldPath);
+        img.resize(250, 250);
+        await fs.rename(oldPath);
+
+        const newPath = path.join(avatarsPath, filename);
+        await fs.rename(oldPath, newPath);
+
+        const avatarURL = path.join("avatars", filename);
+        const updAvatar = await User.findByIdAndUpdate(_id, { avatarURL });
+
+        res.status(200).json({
+            avatarURL: updAvatar.avatarURL
+        })
+    } catch (error) {
+        throw HttpError(500, "Image update failed");
+    }
+};
+
 export default {
     signup: tryCatchWrapper(signup),
     signin: tryCatchWrapper(signin),
     getCurrent: tryCatchWrapper(getCurrent),
     signout: tryCatchWrapper(signout),
     updateSubscription: tryCatchWrapper(updateSubscription),
+    updateAvatar: tryCatchWrapper(updateAvatar),
 }
